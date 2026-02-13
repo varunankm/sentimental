@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Review Sentiment Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #9333ea;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background-color: #0f172a;
+            --card-background: #1e293b;
+            --surface-dark: #0f172a;
+            --surface-light: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #1e293b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 0%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 0% 100%, rgba(147, 51, 234, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 2.75rem;
+            font-weight: 700;
+            position: relative;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        h1 span {
+            display: block;
+            font-size: 1.125rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-top: 0.5rem;
+            letter-spacing: normal;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(8px);
+        }
+
+        input[type="text"]:hover, select:hover {
+            border-color: var(--primary-light);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .form-group::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+            opacity: 0.5;
+        }
+
+        .analysis-type-container {
+            margin: 2rem 0;
+        }
+
+        .analysis-type-label {
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .analysis-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .analysis-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .analysis-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-custom {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            height: 100%;
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .option-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .option-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .analysis-option input[type="radio"]:checked + .radio-custom {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color),
+                       0 0 20px rgba(99, 102, 241, 0.2);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.1));
+        }
+
+        .analysis-option input[type="radio"]:checked + .radio-custom .option-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transform: scale(1.1);
+        }
+
+        .analysis-option:hover .radio-custom {
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+            box-shadow: var(--shadow-md);
+            transform: translateY(0);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        button:hover::before {
+            transform: translateX(100%);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .sentiment-box {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            background: var(--card-background);
+            box-shadow: var(--shadow);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sentiment-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            z-index: 1;
+        }
+
+        .sentiment-box:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .positive {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .negative {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .neutral {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .sentiment-label {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-family: var(--font-heading);
+            opacity: 0.9;
+        }
+
+        .percent {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin: 1rem 0;
+            font-family: var(--font-heading);
+        }
+
+        .count {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .error {
+            color: var(--danger-color);
+            text-align: center;
+            margin-top: 1.5rem;
+            font-weight: 500;
+            background: #fef2f2;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #fee2e2;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .review-list {
+            margin-top: 3rem;
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 1rem;
+            background: rgba(30, 41, 59, 0.7);
+            box-shadow: var(--shadow);
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--background-color);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .review-list h2 {
+            font-family: var(--font-heading);
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            padding: 1rem 0;
+            z-index: 10;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .review-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .review-list::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+
+        .review-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        .review {
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .review::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            z-index: 1;
+        }
+
+        .review:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .review.positive {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .review.negative {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .review.neutral {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .chart::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.05));
+            z-index: 1;
+        }
+
+        .chart:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .aspect-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .aspect-badge.positive {
+            background: var(--success-color);
+        }
+
+        .aspect-badge.negative {
+            background: var(--danger-color);
+        }
+
+        .aspect-badge.neutral {
+            background: var(--warning-color);
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced App Review Analysis</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <input type="text" name="app_url" placeholder="Enter Google Play Store URL or App ID" required>
+            </div>
+            <div class="form-group analysis-type-container">
+                <label class="analysis-type-label">Analysis Type:</label>
+                <div class="analysis-options">
+                    <label class="analysis-option">
+                        <input type="radio" name="analysis_type" value="quick" checked>
+                        <span class="radio-custom">
+                            <span class="option-icon">⚡</span>
+                            <span class="option-text">
+                                <span class="option-title">Quick Analysis</span>
+                                <span class="option-desc">Fastest results, First 500 reviews</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="analysis-option">
+                        <input type="radio" name="analysis_type" value="full">
+                        <span class="radio-custom">
+                            <span class="option-icon">🎯</span>
+                            <span class="option-text">
+                                <span class="option-title">Full Analysis</span>
+                                <span class="option-desc">Maximum accuracy, takes longer,Entire review</span>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit">Analyze Reviews</button>
+        </form>
+
+        {% if app_title %}
+        <div style="text-align: center; margin-top: 20px;">
+            <h2>App: {{ app_title }}</h2>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <div class="results">
+            <div class="sentiment-box positive">
+                <div class="emoji">😊</div>
+                <h3 class="sentiment-label">Positive</h3>
+                <div class="percent">{{ results.positive }}%</div>
+                <p class="count">({{ counts.positive }} reviews)</p>
+            </div>
+            <div class="sentiment-box neutral">
+                <div class="emoji">😐</div>
+                <h3 class="sentiment-label">Neutral</h3>
+                <div class="percent">{{ results.neutral }}%</div>
+                <p class="count">({{ counts.neutral }} reviews)</p>
+            </div>
+            <div class="sentiment-box negative">
+                <div class="emoji">😔</div>
+                <h3 class="sentiment-label">Negative</h3>
+                <div class="percent">{{ results.negative }}%</div>
+                <p class="count">({{ counts.negative }} reviews)</p>
+            </div>
+        </div>
+
+        {% if charts %}
+        <div class="charts-container">
+            <div class="chart">
+                <div id="sentiment_pie"></div>
+            </div>
+            <div class="chart">
+                <div id="aspect_bar"></div>
+            </div>
+            <div class="chart" style="grid-column: span 2;">
+                <div id="aspect_radar"></div>
+            </div>
+        </div>
+
+        {% endif %}
+
+        <script>
+            var charts = {{ charts | tojson | safe if charts else 'null' }};
+            if (charts) {
+                Plotly.newPlot('sentiment_pie', JSON.parse(charts.sentiment_pie).data, JSON.parse(charts.sentiment_pie).layout);
+                Plotly.newPlot('aspect_bar', JSON.parse(charts.aspect_bar).data, JSON.parse(charts.aspect_bar).layout);
+                Plotly.newPlot('aspect_radar', JSON.parse(charts.aspect_radar).data, JSON.parse(charts.aspect_radar).layout);
+            }
+        </script>
+        {% endif %}
+
+        {% if detailed_reviews %}
+        <div class="review-list">
+            <h2>Individual Review Analysis</h2>
+            {% for review in detailed_reviews %}
+            <div class="review {{ review.sentiment }}">
+                <p>{{ review.text }}</p>
+                {% if review.aspects %}
+                <div class="aspects">
+                    <strong>Aspects:</strong>
+                    {% for aspect, score in review.aspects.items() %}
+                        {% set sentiment = 'positive' if score >= 0.05 else ('negative' if score <= -0.05 else 'neutral') %}
+                        <span class="aspect-badge {{ sentiment }}">{{ aspect }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
